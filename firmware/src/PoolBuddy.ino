@@ -11,7 +11,8 @@ unsigned int Metric_Publish_Rate = 30000;
 unsigned int MetricnextPublishTime;
 int nextSampleTime, nextSleepTime;
 int SAMPLE_INTERVAL = 2500;
-int SLEEP_INTERVAL = 60000;
+int SLEEP_INTERVAL = 60000 * 5;
+int WAKE_INTERVAL = 60000;
 
 double pH = 0;
 double ORP = 0;
@@ -34,7 +35,7 @@ void setup() {
   Particle.function("check",check_calibrated);
   Particle.function("slope",check_slope);
 
-  nextSleepTime = millis() + 30000 + SLEEP_INTERVAL;
+  nextSleepTime = millis() + WAKE_INTERVAL;
 }
 
 void loop() {
@@ -46,11 +47,16 @@ void loop() {
     soc = lipo.getSOC();
     }
   if(millis() > nextSleepTime) {
-    nextSleepTime = millis() + 30000 + SLEEP_INTERVAL;
+    Particle.publish("waterdata", water_data(), PRIVATE);
+    nextSleepTime = millis() + SLEEP_INTERVAL + WAKE_INTERVAL;
     executeRequest(PH_ADDRESS,"Sleep");
     executeRequest(ORP_ADDRESS,"Sleep");
-    System.sleep(SLEEP_MODE_DEEP,30);
+    System.sleep(SLEEP_MODE_DEEP,60*5);
   }
+}
+
+String water_data() {
+  return String::format("{temp:%f,ph:%f,orp:%f,soc:%f}",celsius,pH,ORP,soc);
 }
 
 void getPh() {
