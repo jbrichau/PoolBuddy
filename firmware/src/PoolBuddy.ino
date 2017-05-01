@@ -56,7 +56,7 @@ void loop() {
 }
 
 String water_data() {
-  return String::format("{temp:%f,ph:%f,orp:%f,soc:%f}",celsius,pH,ORP,soc);
+  return String::format("{temperature:%f,ph:%f,orp:%f,soc:%f}",celsius,pH,ORP,soc);
 }
 
 void getPh() {
