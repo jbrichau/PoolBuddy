@@ -5,6 +5,9 @@
 #define PH_ADDRESS 99
 #define ORP_ADDRESS 98
 
+// Set external antenna (remembered after power off)
+STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
+
 DS18B20 ds18b20(TEMP_SENSOR);
 double celsius;
 unsigned int Metric_Publish_Rate = 30000;
@@ -17,6 +20,7 @@ int WAKE_INTERVAL = 60000;
 double pH = 0;
 double ORP = 0;
 double soc = 0;
+int wifi;
 
 void setup() {
   Serial.begin(9600);
@@ -34,6 +38,7 @@ void setup() {
   Particle.function("calibrateORP",calibrate_orp);
   Particle.function("check",check_calibrated);
   Particle.function("slope",check_slope);
+  Particle.variable("wifi",wifi);
 
   nextSleepTime = millis() + WAKE_INTERVAL;
 }
@@ -45,6 +50,7 @@ void loop() {
     getORP();
     nextSampleTime = millis() + SAMPLE_INTERVAL;
     soc = lipo.getSOC();
+    wifi = WiFi.RSSI();
     }
   if(millis() > nextSleepTime) {
     Particle.publish("waterdata", water_data(), PRIVATE);
