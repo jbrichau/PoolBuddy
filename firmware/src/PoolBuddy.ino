@@ -4,18 +4,15 @@
 #define TEMP_SENSOR D6
 #define PH_ADDRESS 99
 #define ORP_ADDRESS 98
+#define SAMPLE_INTERVAL 2500
+#define WAKE_INTERVAL 60000;
 
 // Set external antenna (remembered after power off)
 STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
 
 DS18B20 ds18b20(TEMP_SENSOR);
 double celsius;
-unsigned int Metric_Publish_Rate = 30000;
-unsigned int MetricnextPublishTime;
-int nextSampleTime, nextSleepTime;
-int SAMPLE_INTERVAL = 2500;
-int SLEEP_INTERVAL = 60000 * 5;
-int WAKE_INTERVAL = 60000;
+int nextSampleTime, nextSleepTime, sleepInterval;
 
 double pH = 0;
 double ORP = 0;
@@ -24,7 +21,8 @@ int wifi;
 
 void setup() {
   Serial.begin(9600);
-  Wire.begin();
+  if (!Wire.isEnabled())
+    Wire.begin();
   pinMode(TEMP_SENSOR, INPUT);
 
   lipo.begin();
@@ -44,39 +42,45 @@ void setup() {
 }
 
 void loop() {
-  if (millis() > nextSampleTime){
+  if (millis() > nextSampleTime) {
     getTemp();
     getPh();
     getORP();
     nextSampleTime = millis() + SAMPLE_INTERVAL;
     soc = lipo.getSOC();
     wifi = WiFi.RSSI();
-    }
+  }
   if(millis() > nextSleepTime) {
     Particle.publish("waterdata", water_data(), PRIVATE);
-    nextSleepTime = millis() + SLEEP_INTERVAL + WAKE_INTERVAL;
+    if(soc <= 10)
+      sleepInterval = 60 * 15;
+    else if(soc <= 10)
+      sleepInterval = 60 * 10;
+    else
+      sleepInterval = 60 * 5;
+    nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
     executeRequest(PH_ADDRESS,"Sleep");
     executeRequest(ORP_ADDRESS,"Sleep");
-    System.sleep(SLEEP_MODE_DEEP,60*5);
+    System.sleep(SLEEP_MODE_DEEP,sleepInterval);
   }
 }
 
 String water_data() {
-  return String::format("{'temperature':%f,'ph':%f,'orp':%f,'soc':%f}",celsius,pH,ORP,soc);
+  return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f}",celsius,pH,ORP,soc);
 }
 
 void getPh() {
   String pH_data = executeRequest(PH_ADDRESS,"R");
-  Serial.print("Ph:");
-  Serial.println(pH_data);
+  //Serial.print("Ph:");
+  //Serial.println(pH_data);
   if (isdigit(pH_data[0]))
     pH = String(pH_data).toFloat();
  }
 
 void getORP() {
   String orp_data = executeRequest(ORP_ADDRESS,"R");
-  Serial.print("ORP:");
-  Serial.println(orp_data);
+  //Serial.print("ORP:");
+  //Serial.println(orp_data);
   if (isdigit(orp_data[0]))
     ORP = orp_data.toFloat();
 }
@@ -121,12 +125,12 @@ void getTemp() {
   if(!ds18b20.search()){
     ds18b20.resetsearch();
     celsius = ds18b20.getTemperature();
-    Serial.printlnf("%f celsius",celsius);
+    //Serial.printlnf("%f celsius",celsius);
     while (!ds18b20.crcCheck() && dsAttempts < 4){
-      Serial.println("Caught bad value.");
+      //Serial.println("Caught bad value.");
       dsAttempts++;
-      Serial.print("Attempts to Read: ");
-      Serial.println(dsAttempts);
+      //Serial.print("Attempts to Read: ");
+      //Serial.println(dsAttempts);
       if (dsAttempts == 3){
         delay(1000);
       }
