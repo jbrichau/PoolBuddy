@@ -1,7 +1,8 @@
 #include "DS18B20.h"
 #include "SparkFunMAX17043.h"
 
-#define TEMP_SENSOR D6
+#define POWER D6
+#define TEMP_SENSOR D5
 #define PH_ADDRESS 99
 #define ORP_ADDRESS 98
 #define SAMPLE_INTERVAL 2500
@@ -20,10 +21,12 @@ double soc = 0;
 int wifi;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   if (!Wire.isEnabled())
     Wire.begin();
+  pinMode(POWER,OUTPUT);
   pinMode(TEMP_SENSOR, INPUT);
+  digitalWrite(POWER, HIGH);
 
   lipo.begin();
   lipo.quickStart();
@@ -54,13 +57,14 @@ void loop() {
     Particle.publish("waterdata", water_data(), PRIVATE);
     if(soc <= 10)
       sleepInterval = 60 * 15;
-    else if(soc <= 10)
+    else if(soc <= 20)
       sleepInterval = 60 * 10;
     else
       sleepInterval = 60 * 5;
     nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
     executeRequest(PH_ADDRESS,"Sleep");
     executeRequest(ORP_ADDRESS,"Sleep");
+    digitalWrite(POWER, LOW);
     System.sleep(SLEEP_MODE_DEEP,sleepInterval);
   }
 }
@@ -109,8 +113,10 @@ int calibrate_orp(String arg) {
 }
 
 int check_calibrated(String args) {
-  executeRequest(PH_ADDRESS,"Cal,?");
-  executeRequest(ORP_ADDRESS,"Cal,?");
+  //Serial.println(executeRequest(PH_ADDRESS,"Cal,?"));
+  //Serial.println(executeRequest(PH_ADDRESS,"Status"));
+  //Serial.println(executeRequest(ORP_ADDRESS,"Cal,?"));
+  //Serial.println(executeRequest(ORP_ADDRESS,"Status"));
   return 0;
 }
 
@@ -153,20 +159,24 @@ String executeRequest(int address, String cmd) {
   else
     delay(300);
   Wire.requestFrom(address, 20);
-  switch (Wire.read()) {
+  int val=Wire.read();
+  switch (val) {
     case 1:
-      Serial.println("Success");
+      //Serial.println("Success");
       break;
     case 2:
-      Serial.println("Failed");
+      //Serial.println("Failed");
       return String("Failed");
       break;
     case 254:
-      Serial.println("Pending");
+      //Serial.println("Pending");
       break;
     case 255:
-      Serial.println("No Data");
+      //Serial.println("No Data");
       break;
+    default:
+      //Serial.printlnf("Invalid response %d",val);
+      return String("Failed");
   }
 
   while(Wire.available()) {
