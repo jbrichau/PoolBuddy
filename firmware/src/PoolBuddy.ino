@@ -12,11 +12,11 @@
 STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
 
 DS18B20 ds18b20(TEMP_SENSOR);
-double celsius;
 int nextSampleTime, nextSleepTime, sleepInterval;
 
-double pH = 0;
-double ORP = 0;
+double temp = 0;
+double ph = 0;
+double orp = 0;
 double soc = 0;
 int wifi;
 
@@ -31,9 +31,9 @@ void setup() {
   lipo.begin();
   lipo.quickStart();
 
-  Particle.variable("temp", celsius);
-  Particle.variable("pH", pH);
-  Particle.variable("ORP", ORP);
+  Particle.variable("temp", temp);
+  Particle.variable("pH", ph);
+  Particle.variable("ORP", orp);
   Particle.variable("soc", soc);
   Particle.function("calibratePh",calibrate_ph);
   Particle.function("calibrateORP",calibrate_orp);
@@ -46,9 +46,10 @@ void setup() {
 
 void loop() {
   if (millis() > nextSampleTime) {
-    getTemp();
-    getPh();
-    getORP();
+    measure_temp();
+    compensate_temp_ph();
+    measure_ph();
+    measure_orp();
     nextSampleTime = millis() + SAMPLE_INTERVAL;
     soc = lipo.getSOC();
     wifi = WiFi.RSSI();
@@ -70,23 +71,59 @@ void loop() {
 }
 
 String water_data() {
-  return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f}",celsius,pH,ORP,soc);
+  return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f,\"wifi\":%d}",temp,ph,orp,soc,wifi);
 }
 
-void getPh() {
+void measure_ph() {
   String pH_data = executeRequest(PH_ADDRESS,"R");
   //Serial.print("Ph:");
   //Serial.println(pH_data);
-  if (isdigit(pH_data[0]))
-    pH = String(pH_data).toFloat();
- }
+  if (isdigit(pH_data[0])) {
+    String(pH_data).toFloat();
+    if(ph == 0)
+      ph = String(pH_data).toFloat();
+    else
+      ph = (ph + String(pH_data).toFloat()) / 2;
+  }
+}
 
-void getORP() {
+void measure_orp() {
   String orp_data = executeRequest(ORP_ADDRESS,"R");
   //Serial.print("ORP:");
   //Serial.println(orp_data);
-  if (isdigit(orp_data[0]))
-    ORP = orp_data.toFloat();
+  if (isdigit(orp_data[0])) {
+    String(orp_data).toFloat();
+    if(orp == 0)
+      orp = String(orp_data).toFloat();
+    else
+      orp = (orp + String(orp_data).toFloat()) / 2;
+  }
+}
+
+void measure_temp() {
+  int dsAttempts = 0;
+  double celsius = 0;
+
+  if(!ds18b20.search()){
+    ds18b20.resetsearch();
+    celsius = ds18b20.getTemperature();
+    //Serial.printlnf("%f celsius",celsius);
+    while (!ds18b20.crcCheck() && dsAttempts < 4){
+      //Serial.println("Caught bad value.");
+      dsAttempts++;
+      //Serial.print("Attempts to Read: ");
+      //Serial.println(dsAttempts);
+      delay(1000);
+      ds18b20.resetsearch();
+      celsius = ds18b20.getTemperature();
+    }
+    if(dsAttempts < 4) {
+      if(temp == 0)
+        temp = celsius;
+      else
+        temp = (temp + celsius) / 2;
+    }
+  }
 }
 
 int calibrate_ph(String arg) {
@@ -105,11 +142,16 @@ int calibrate_ph(String arg) {
 }
 
 int calibrate_orp(String arg) {
-  String commandString = String("Cal");
-  commandString.concat(",");
+  String commandString = String("Cal,");
   commandString.concat(arg);
   executeRequest(ORP_ADDRESS,commandString);
   return 0;
+}
+
+void compensate_temp_ph() {
+  String commandString = String("T,");
+  commandString.concat(temp);
+  executeRequest(PH_ADDRESS,commandString);
 }
 
 int check_calibrated(String args) {
@@ -123,28 +165,6 @@ int check_calibrated(String args) {
 int check_slope(String args) {
   executeRequest(PH_ADDRESS,"Slope,?");
   return 0;
-}
-
-void getTemp() {
-  int dsAttempts = 0;
-
-  if(!ds18b20.search()){
-    ds18b20.resetsearch();
-    celsius = ds18b20.getTemperature();
-    //Serial.printlnf("%f celsius",celsius);
-    while (!ds18b20.crcCheck() && dsAttempts < 4){
-      //Serial.println("Caught bad value.");
-      dsAttempts++;
-      //Serial.print("Attempts to Read: ");
-      //Serial.println(dsAttempts);
-      if (dsAttempts == 3){
-        delay(1000);
-      }
-      ds18b20.resetsearch();
-      celsius = ds18b20.getTemperature();
-      continue;
-    }
-  }
 }
 
 String executeRequest(int address, String cmd) {
