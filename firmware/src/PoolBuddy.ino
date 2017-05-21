@@ -150,7 +150,7 @@ int calibrate_orp(String arg) {
 
 void compensate_temp_ph() {
   String commandString = String("T,");
-  commandString.concat(temp);
+  commandString.concat(String(temp, 2));
   executeRequest(PH_ADDRESS,commandString);
 }
 
