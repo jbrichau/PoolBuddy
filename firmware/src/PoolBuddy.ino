@@ -50,9 +50,9 @@ void loop() {
     compensate_temp_ph();
     measure_ph();
     measure_orp();
+    measure_wifi();
     nextSampleTime = millis() + SAMPLE_INTERVAL;
     soc = lipo.getSOC();
-    wifi = WiFi.RSSI();
   }
   if(millis() > nextSleepTime) {
     Particle.publish("waterdata", water_data(), PRIVATE);
@@ -124,6 +124,12 @@ void measure_temp() {
         temp = (temp + celsius) / 2;
     }
   }
+}
+
+void measure_wifi() {
+  float wifi_db = WiFi.RSSI();
+  if(wifi_db < 0)
+    wifi = (int)((-wifi_db / 127)*100);
 }
 
 int calibrate_ph(String arg) {
