@@ -10,6 +10,10 @@
 
 // Set external antenna (remembered after power off)
 STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
+//STARTUP(WiFi.selectAntenna(ANT_AUTO));
+
+// Reset application if unresponsive for 3 minutes
+ApplicationWatchdog wd(180000, System.reset);
 
 DS18B20 ds18b20(TEMP_SENSOR);
 int nextSampleTime, nextSleepTime, sleepInterval;
