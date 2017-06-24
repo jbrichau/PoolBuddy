@@ -1,4 +1,5 @@
 import React from 'react';
+import WaterChart from './WaterChart.js';
 import {LineChart,XAxis,YAxis,Legend,Tooltip,CartesianGrid,Line} from 'recharts';
 import request from 'superagent';
 
@@ -21,54 +22,14 @@ class WaterData extends React.Component {
 
   render() {
     if (this.state.data.length == 0)
-      return (<h1> Hello </h1>);
+      return (<h1> Waiting for data... </h1>);
     else return (
       <div>
-      	<LineChart width={1200} height={200} data={this.state.data}
-              margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="timestamp"/>
-         <YAxis/>
-         <CartesianGrid strokeDasharray="3 3"/>
-         <Tooltip/>
-         <Legend />
-         <Line type="monotone" dataKey="temperature" stroke="#8884d8" activeDot={{r: 8}}/>
-       </LineChart>
-       <LineChart width={1200} height={200} data={this.state.data}
-             margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-        <XAxis dataKey="timestamp"/>
-        <YAxis/>
-        <CartesianGrid strokeDasharray="3 3"/>
-        <Tooltip/>
-        <Legend />
-        <Line type="monotone" dataKey="ph" stroke="#82ca9d" />
-      </LineChart>
-      <LineChart width={1200} height={200} data={this.state.data}
-            margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-       <XAxis dataKey="timestamp"/>
-       <YAxis/>
-       <CartesianGrid strokeDasharray="3 3"/>
-       <Tooltip/>
-       <Legend />
-       <Line type="monotone" dataKey="orp" stroke="#82ca9d" />
-     </LineChart>
-     <LineChart width={1200} height={200} data={this.state.data}
-           margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-      <XAxis dataKey="timestamp"/>
-      <YAxis/>
-      <CartesianGrid strokeDasharray="3 3"/>
-      <Tooltip/>
-      <Legend />
-      <Line type="monotone" dataKey="wifi" stroke="#82ca9d" />
-    </LineChart>
-    <LineChart width={1200} height={200} data={this.state.data}
-          margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-     <XAxis dataKey="timestamp"/>
-     <YAxis/>
-     <CartesianGrid strokeDasharray="3 3"/>
-     <Tooltip/>
-     <Legend />
-     <Line type="monotone" dataKey="soc" stroke="#82ca9d" />
-   </LineChart>
+        <WaterChart dataKey="temperature" stroke="#8884d8" data={this.state.data} />
+        <WaterChart dataKey="ph" minValue={7.2} stroke="#82ca9d" data={this.state.data} />
+        <WaterChart dataKey="orp" minValue={650} stroke="#82ca9d" data={this.state.data} />
+        <WaterChart dataKey="wifi" stroke="#82ca9d" data={this.state.data} />
+        <WaterChart dataKey="soc" stroke="#82ca9d" data={this.state.data} />
      </div>);
   }
 }
