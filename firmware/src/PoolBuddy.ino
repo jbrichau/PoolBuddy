@@ -23,9 +23,14 @@ double ph = 0;
 double orp = 0;
 double soc = 0;
 int wifi;
+bool calibrationmode = false;
 
 void setup() {
   //Serial.begin(9600);
+  temp = 0;
+  ph = 0;
+  orp = 0;
+  soc = 0;
   if (!Wire.isEnabled())
     Wire.begin();
   pinMode(POWER,OUTPUT);
@@ -39,9 +44,12 @@ void setup() {
   Particle.variable("pH", ph);
   Particle.variable("ORP", orp);
   Particle.variable("soc", soc);
+  Particle.variable("calibrating",calibrationmode);
+  Particle.function("switchmode",switchcalibrationmode);
   Particle.function("calibratePh",calibrate_ph);
   Particle.function("calibrateORP",calibrate_orp);
   Particle.function("check",check_calibrated);
+  Particle.function("measure",measure);
   Particle.function("slope",check_slope);
   Particle.variable("wifi",wifi);
 
@@ -49,28 +57,30 @@ void setup() {
 }
 
 void loop() {
-  if (millis() > nextSampleTime) {
-    measure_temp();
-    compensate_temp_ph();
-    measure_ph();
-    measure_orp();
-    measure_wifi();
-    nextSampleTime = millis() + SAMPLE_INTERVAL;
-    soc = lipo.getSOC();
-  }
-  if(millis() > nextSleepTime) {
-    Particle.publish("waterdata", water_data(), PRIVATE);
-    if(soc <= 10)
-      sleepInterval = 60 * 15;
-    else if(soc <= 20)
-      sleepInterval = 60 * 10;
-    else
-      sleepInterval = 60 * 5;
-    nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
-    executeRequest(PH_ADDRESS,"Sleep");
-    executeRequest(ORP_ADDRESS,"Sleep");
-    digitalWrite(POWER, LOW);
-    System.sleep(SLEEP_MODE_DEEP,sleepInterval);
+  if (!calibrationmode) {
+    if (millis() > nextSampleTime) {
+      measure_temp();
+      compensate_temp_ph();
+      measure_ph();
+      measure_orp();
+      measure_wifi();
+      nextSampleTime = millis() + SAMPLE_INTERVAL;
+      soc = lipo.getSOC();
+    }
+    if(millis() > nextSleepTime) {
+      Particle.publish("waterdata", water_data(), PRIVATE);
+      if(soc <= 10)
+        sleepInterval = 60 * 15;
+      else if(soc <= 20)
+        sleepInterval = 60 * 10;
+      else
+        sleepInterval = 60 * 5;
+      nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
+      executeRequest(PH_ADDRESS,"Sleep");
+      executeRequest(ORP_ADDRESS,"Sleep");
+      digitalWrite(POWER, LOW);
+      System.sleep(SLEEP_MODE_DEEP,sleepInterval);
+    }
   }
 }
 
@@ -78,16 +88,26 @@ String water_data() {
   return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f,\"wifi\":%d}",temp,ph,orp,soc,wifi);
 }
 
+int measure(String arg) {
+  ph = 0;
+  orp = 0;
+  temp = 0;
+  measure_temp();
+  measure_ph();
+  measure_orp();
+  measure_wifi();
+}
+
 void measure_ph() {
   String pH_data = executeRequest(PH_ADDRESS,"R");
   //Serial.print("Ph:");
   //Serial.println(pH_data);
   if (isdigit(pH_data[0])) {
-    String(pH_data).toFloat();
+    float current = String(pH_data).toFloat();
     if(ph == 0)
-      ph = String(pH_data).toFloat();
+      ph = current;
     else
-      ph = (ph + String(pH_data).toFloat()) / 2;
+      ph = (ph + current) / 2;
   }
 }
 
@@ -96,11 +116,11 @@ void measure_orp() {
   //Serial.print("ORP:");
   //Serial.println(orp_data);
   if (isdigit(orp_data[0])) {
-    String(orp_data).toFloat();
+    float current = String(orp_data).toFloat();
     if(orp == 0)
-      orp = String(orp_data).toFloat();
+      orp = current;
     else
-      orp = (orp + String(orp_data).toFloat()) / 2;
+      orp = (orp + current) / 2;
   }
 }
 
@@ -136,6 +156,10 @@ void measure_wifi() {
     wifi = (int)((-wifi_db / 127)*100);
 }
 
+int switchcalibrationmode(String arg) {
+  calibrationmode = !calibrationmode;
+}
+
 int calibrate_ph(String arg) {
   String commandString = String("Cal");
   commandString.concat(",");
@@ -147,7 +171,7 @@ int calibrate_ph(String arg) {
     commandString.concat("4.00");
   if(arg=="high")
     commandString.concat("10.00");
-  executeRequest(PH_ADDRESS,commandString);
+  Serial.println(executeRequest(PH_ADDRESS,commandString));
   return 0;
 }
 
@@ -165,10 +189,12 @@ void compensate_temp_ph() {
 }
 
 int check_calibrated(String args) {
-  //Serial.println(executeRequest(PH_ADDRESS,"Cal,?"));
-  //Serial.println(executeRequest(PH_ADDRESS,"Status"));
-  //Serial.println(executeRequest(ORP_ADDRESS,"Cal,?"));
-  //Serial.println(executeRequest(ORP_ADDRESS,"Status"));
+  Serial.println("Ph:");
+  Serial.println(executeRequest(PH_ADDRESS,"Cal,?"));
+  Serial.println(executeRequest(PH_ADDRESS,"Status"));
+  Serial.println("ORP:");
+  Serial.println(executeRequest(ORP_ADDRESS,"Cal,?"));
+  Serial.println(executeRequest(ORP_ADDRESS,"Status"));
   return 0;
 }
 
@@ -184,28 +210,28 @@ String executeRequest(int address, String cmd) {
   Wire.beginTransmission(address);
   Wire.write(cmd);
   Wire.endTransmission();
-  if(cmd=="R")
-    delay(800);
+  if(cmd=="R" | cmd.startsWith("Cal"))
+    delay(900);
   else
     delay(300);
   Wire.requestFrom(address, 20);
   int val=Wire.read();
   switch (val) {
     case 1:
-      //Serial.println("Success");
+      Serial.println("Success");
       break;
     case 2:
-      //Serial.println("Failed");
+      Serial.println("Failed");
       return String("Failed");
       break;
     case 254:
-      //Serial.println("Pending");
+      Serial.println("Pending");
       break;
     case 255:
-      //Serial.println("No Data");
+      Serial.println("No Data");
       break;
     default:
-      //Serial.printlnf("Invalid response %d",val);
+      Serial.printlnf("Invalid response %d",val);
       return String("Failed");
   }
 
@@ -214,5 +240,6 @@ String executeRequest(int address, String cmd) {
     i+=1;
   }
   Wire.endTransmission();
+  //Serial.println(String(data));
   return String(data);
 }
