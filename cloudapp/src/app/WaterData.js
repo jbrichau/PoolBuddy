@@ -26,8 +26,8 @@ class WaterData extends React.Component {
     else return (
       <div>
         <WaterChart dataKey="temperature" stroke="#8884d8" data={this.state.data} />
-        <WaterChart dataKey="ph" minValue={7.2} stroke="#82ca9d" data={this.state.data} />
-        <WaterChart dataKey="orp" minValue={650} stroke="#82ca9d" data={this.state.data} />
+        <WaterChart dataKey="ph" minValue={7.0} maxValue={7.8} stroke="#82ca9d" data={this.state.data} />
+        <WaterChart dataKey="orp" minValue={650} maxValue={800} stroke="#82ca9d" data={this.state.data} />
         <WaterChart dataKey="wifi" stroke="#82ca9d" data={this.state.data} />
         <WaterChart dataKey="soc" stroke="#82ca9d" data={this.state.data} />
      </div>);
