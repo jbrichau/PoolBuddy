@@ -101,6 +101,7 @@ int measure(String arg) {
 void measure_ph() {
   String pH_data = executeRequest(PH_ADDRESS,"R");
   //Serial.print("Ph:");
+  //Particle.publish("ph_reading", pH_data, PRIVATE);
   //Serial.println(pH_data);
   if (isdigit(pH_data[0])) {
     float current = String(pH_data).toFloat();
@@ -128,25 +129,26 @@ void measure_temp() {
   int dsAttempts = 0;
   double celsius = 0;
 
-  if(!ds18b20.search()){
+  if(!ds18b20.search())
     ds18b20.resetsearch();
+
+  celsius = ds18b20.getTemperature();
+  //Serial.printlnf("%f celsius",celsius);
+  while (!ds18b20.crcCheck() && dsAttempts < 4){
+    //Serial.println("Caught bad value.");
+    dsAttempts++;
+    //Serial.print("Attempts to Read: ");
+    //Serial.println(dsAttempts);
+    delay(1000);
+    ds18b20.resetsearch();
+    delay(250);
     celsius = ds18b20.getTemperature();
-    //Serial.printlnf("%f celsius",celsius);
-    while (!ds18b20.crcCheck() && dsAttempts < 4){
-      //Serial.println("Caught bad value.");
-      dsAttempts++;
-      //Serial.print("Attempts to Read: ");
-      //Serial.println(dsAttempts);
-      delay(1000);
-      ds18b20.resetsearch();
-      celsius = ds18b20.getTemperature();
-    }
-    if(dsAttempts < 4) {
-      if(temp == 0)
-        temp = celsius;
-      else
-        temp = (temp + celsius) / 2;
-    }
+  }
+  if(dsAttempts < 4) {
+    if(temp == 0)
+      temp = celsius;
+    else
+      temp = (temp + celsius) / 2;
   }
 }
 
