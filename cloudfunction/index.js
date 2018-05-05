@@ -11,10 +11,10 @@ exports.subscribe = function subscribe(event, callback) {
     projectId: 'poolbuddy-164819'
   });
   const waterdata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
-  waterdata.timestamp = new Date(event.timestamp);
+  waterdata.timestamp = new Date(pubsubMessage.attributes.published_at);
 
   const entity = {
-    key: datastore.key(['waterdata', event.eventId]),
+    key: datastore.key(['pooldata', event.eventId]),
     data: waterdata
     };
 

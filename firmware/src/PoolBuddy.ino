@@ -68,7 +68,7 @@ void loop() {
       soc = lipo.getSOC();
     }
     if(millis() > nextSleepTime) {
-      Particle.publish("waterdata", water_data(), PRIVATE);
+      Particle.publish("pooldata", water_data(), PRIVATE);
       if(soc <= 10)
         sleepInterval = 60 * 15;
       else if(soc <= 20)
