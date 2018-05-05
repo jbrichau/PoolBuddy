@@ -14,7 +14,7 @@ app.post('/data', (request, response) => {
   const datastore = Datastore(dataStoreConfig);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  const query = datastore.createQuery('waterdata')
+  const query = datastore.createQuery('pooldata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {
       descending: false
