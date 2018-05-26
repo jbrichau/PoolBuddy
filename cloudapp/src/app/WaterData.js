@@ -14,10 +14,10 @@ class WaterData extends React.Component {
   }
 
   fetchData() {
-    request.post('/data')
+    request.post('/pooldata')
     .set('Content-Type', 'application/json')
     .send({})
-    .end((err,res) => { this.setState({data:res.body[2]});});
+    .end((err,res) => { this.setState({'data':res.body[2]});});
   }
 
   render() {

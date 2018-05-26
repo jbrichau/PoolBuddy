@@ -1,6 +1,6 @@
 const config = {
   'port': process.env.PORT || 8080,
-  'projectId': 'poolbuddy-164819'
+  'projectId': 'johansiot-199910'
 };
 
 export default config;

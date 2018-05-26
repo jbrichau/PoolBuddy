@@ -10,7 +10,7 @@ const dataStoreConfig = { projectId: config.projectId };
 if(isDevelopment)
   dataStoreConfig.keyFilename = 'config/poolbuddy-apikey.json';
 
-app.post('/data', (request, response) => {
+app.post('/pooldata', (request, response) => {
   const datastore = Datastore(dataStoreConfig);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -28,7 +28,8 @@ if(isDevelopment) {
   const webpackDevMiddleware = require("webpack-dev-middleware");
   const webpack = require("webpack");
   const webpackConfig = require("../webpack.config");
-  const compiler = webpack(webpackConfig(process.env));
+  webpackConfig.mode = 'development';
+  const compiler = webpack(webpackConfig);
   app.use(webpackDevMiddleware(compiler, {
     publicPath: "/" // Same as `output.publicPath` in most cases.
   }));

@@ -38,7 +38,6 @@ class WaterChart extends React.Component {
   render() {
     let minReferenceLine, maxReferenceLine;
     const ticks = new Array();
-    this.props.data[this.props.data.length - 1]
     if (this.props.minValue)
       minReferenceLine = <ReferenceLine y={this.props.minValue} stroke="red" alwaysShow={true}/>;
     if (this.props.maxValue)

@@ -2,8 +2,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin'); //installed via npm
 const webpack = require('webpack'); //to access built-in plugins
 const path = require('path');
 
-module.exports = function(env) {
-  return {
+module.exports = {
     entry: './src/app/index.js',
     output: {
       path: path.resolve(__dirname, 'dist'),
@@ -18,10 +17,9 @@ module.exports = function(env) {
       ]
     },
     plugins: [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: process.env.NODE_ENV == "production"
-      }),
       new HtmlWebpackPlugin({template: './src/app/index.html.tpl'})
-    ]
+    ],
+    optimization: {
+      minimize: true,
+    }
   };
-}
