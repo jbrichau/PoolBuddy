@@ -70,11 +70,11 @@ void loop() {
     if(millis() > nextSleepTime) {
       Particle.publish("pooldata", water_data(), PRIVATE);
       if(soc <= 10)
-        sleepInterval = 60 * 15;
+        sleepInterval = 60 * 60;
       else if(soc <= 20)
-        sleepInterval = 60 * 10;
+        sleepInterval = 60 * 30;
       else
-        sleepInterval = 60 * 5;
+        sleepInterval = 60 * 15;
       nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
       executeRequest(PH_ADDRESS,"Sleep");
       executeRequest(ORP_ADDRESS,"Sleep");
@@ -153,9 +153,9 @@ void measure_temp() {
 }
 
 void measure_wifi() {
-  float wifi_db = WiFi.RSSI();
+  int wifi_db = WiFi.RSSI();
   if(wifi_db < 0)
-    wifi = (int)((-wifi_db / 127)*100);
+    wifi = map(wifi_db, -1, -127, 100, 0);
 }
 
 int switchcalibrationmode(String arg) {
