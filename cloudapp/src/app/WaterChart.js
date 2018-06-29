@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from 'reactstrap';
 import { LineChart, XAxis, YAxis, Legend, Tooltip, CartesianGrid, Line, ReferenceLine } from 'recharts';
 
 const CustomizedAxisTick = React.createClass({
@@ -39,20 +40,23 @@ class WaterChart extends React.Component {
     let minReferenceLine, maxReferenceLine;
     const ticks = new Array();
     if (this.props.minValue)
-      minReferenceLine = <ReferenceLine y={this.props.minValue} stroke="red" alwaysShow={true}/>;
+      minReferenceLine = <ReferenceLine y={this.props.minValue} stroke="red" strokeDasharray="3 3" alwaysShow={true}/>;
     if (this.props.maxValue)
-      maxReferenceLine = <ReferenceLine y={this.props.maxValue} stroke="red" alwaysShow={true}/>;
+      maxReferenceLine = <ReferenceLine y={this.props.maxValue} stroke="red" strokeDasharray="3 3" alwaysShow={true}/>;
     return (
-      <LineChart width={1200} height={200} data={this.props.data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <XAxis dataKey="timestamp" scale="utcTime" tick={<CustomizedAxisTick />} />
-        <YAxis />
-        <CartesianGrid strokeDasharray="3 3" />
-        <Tooltip content={<CustomizedTooltip/>}/>
-        <Legend />
-        <Line type="monotone" dataKey={this.props.dataKey} stroke={this.props.stroke} strokeWidth="2" dot={false} activeDot={{ r: 8 }} />
-        {minReferenceLine}
-        {maxReferenceLine}
-      </LineChart>
+      <div>
+        <h2>{this.props.title} <Badge color="secondary">{this.props.data[this.props.data.length-1][this.props.dataKey].toFixed(2)} {this.props.unit}</Badge></h2>
+        <LineChart width={1000} height={200} data={this.props.data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <XAxis dataKey="timestamp" scale="utcTime" tick={<CustomizedAxisTick />} />
+          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" />
+          <Tooltip content={<CustomizedTooltip />} />
+          <Legend />
+          <Line type="monotone" dataKey={this.props.dataKey} stroke={this.props.stroke} strokeWidth="2" dot={false} activeDot={{ r: 8 }} />
+          {minReferenceLine}
+          {maxReferenceLine}
+        </LineChart>
+      </div>
     );
   }
 }
