@@ -1,12 +1,14 @@
 const Datastore = require('@google-cloud/datastore');
 /**
- * Triggered from a message on a Cloud Pub/Sub topic.
+ * Background Cloud Function to be triggered by Pub/Sub.
+ * This function is exported by index.js, and executed when
+ * the trigger topic receives a message.
  *
- * @param {!Object} event The Cloud Functions event.
- * @param {!Function} The callback function.
+ * @param {object} data The event payload.
+ * @param {object} context The event metadata.
  */
-exports.subscribe = function subscribe(event, callback) {
-  const pubsubMessage = event.data;
+exports.subscribe = function subscribe(data, context) {
+  const pubsubMessage = data.data;
   const datastore = Datastore({
     projectId: 'poolbuddy-164819'
   });
@@ -23,6 +25,4 @@ exports.subscribe = function subscribe(event, callback) {
     .catch((err) => {
       console.error('ERROR:', err);
     });
-
-  callback();
 };
