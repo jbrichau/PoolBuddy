@@ -5,7 +5,7 @@ import request from 'superagent';
 class WaterData extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { "data":[] };
+    this.state = { data: new Array() };
   }
 
   componentDidMount() {
@@ -16,11 +16,13 @@ class WaterData extends React.Component {
     request.post('/pooldata')
     .set('Content-Type', 'application/json')
     .send({})
-    .end((err,res) => { this.setState({'data':res.body[2]});});
+    .end((err,res) => { this.setState({data:res.body[2]});});
   }
 
   render() {
-    if (this.state.data.length == 0)
+    if(!this.state.data)
+      return (<h1> Data fetch error </h1>);
+    else if (this.state.data.length == 0)
       return (<h1> Waiting for data... </h1>);
     else return (
       <div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from 'reactstrap';
 import { LineChart, XAxis, YAxis, Legend, Tooltip, CartesianGrid, Line, ReferenceLine } from 'recharts';
 
-const CustomizedAxisTick = React.createClass({
+class CustomizedAxisTick extends React.Component {
   render() {
     const { x, y, stroke, payload } = this.props;
 
@@ -12,7 +12,7 @@ const CustomizedAxisTick = React.createClass({
       </g>
     );
   }
-});
+};
 
 function CustomizedTooltip(props) {
     const { active } = props;
