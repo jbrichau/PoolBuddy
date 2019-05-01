@@ -4,16 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "bundle": "webpack --config webpack.prod.config.js --mode production",
+    "bundle": "webpack --config webpack.prod.config.js --mode production; babel ./src/server/ --out-dir dist",
     "dev": "NODE_ENV=development babel-watch ./src/server.js",
-    "start": "NODE_ENV=production babel-node ./src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "NODE_ENV=production node ./dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "gcloud app deploy"
   },
   "author": "Johan Brichau",
   "license": "MIT",
   "dependencies": {
+    "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.4",
-    "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "@google-cloud/datastore": "^1.4.0",

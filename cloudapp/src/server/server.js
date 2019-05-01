@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import Datastore from '@google-cloud/datastore';
-import config from '../config/config';
+import config from './config';
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const app = express();

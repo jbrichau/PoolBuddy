@@ -1,6 +1,5 @@
 runtime: nodejs8
 env: standard
-instance_class: F4_1G
 automatic_scaling:
-  min_num_instances: 1
-  max_num_instances: 1
+  min_instances: 1
+  max_instances: 1
