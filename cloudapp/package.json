@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "bundle": "webpack --config webpack.prod.config.js --mode production; babel ./src/server/ --out-dir dist",
-    "dev": "NODE_ENV=development babel-watch ./src/server.js",
+    "dev": "NODE_ENV=development babel-watch ./src/server/server.js",
     "start": "NODE_ENV=production node ./dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "gcloud app deploy"

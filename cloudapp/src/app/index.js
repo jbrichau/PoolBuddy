@@ -1,8 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import WaterData from './WaterData';
+import SoilData from './SoilData';
 
 ReactDOM.render(
-  <WaterData/>,
+  <div>
+    <WaterData/>
+    <SoilData/>
+  </div>,
   document.getElementById('root')
 );

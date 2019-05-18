@@ -8,18 +8,17 @@ const Datastore = require('@google-cloud/datastore');
  * @param {object} context The event metadata.
  */
 exports.subscribe = function subscribe(data, context) {
-  const pubsubMessage = data.data;
+  const pubsubMessage = data;
   const datastore = Datastore({
-    projectId: 'poolbuddy-164819'
+    projectId: 'johansiot-199910'
   });
-  const waterdata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
-  waterdata.timestamp = new Date(pubsubMessage.attributes.published_at);
+  const soildata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
+  soildata.timestamp = new Date(pubsubMessage.attributes.published_at);
 
   const entity = {
-    key: datastore.key(['pooldata', event.eventId]),
-    data: waterdata
+    key: datastore.key(['pooldata', pubsubMessage.messageId]),
+    data: soildata
     };
-
   datastore.save(entity)
   	//.then(() => { console.log(entity) })
     .catch((err) => {

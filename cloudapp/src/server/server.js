@@ -24,10 +24,24 @@ app.post('/pooldata', (request, response) => {
   });
 });
 
+app.post('/soildata', (request, response) => {
+  const datastore = Datastore(dataStoreConfig);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const query = datastore.createQuery('soildata')
+    .filter('timestamp', '>=', yesterday)
+    .order('timestamp', {
+      descending: false
+    });
+  datastore.runQuery(query, function(err, entities, info) {
+    response.json([err,info,entities]);
+  });
+});
+
 if(isDevelopment) {
   const webpackDevMiddleware = require("webpack-dev-middleware");
   const webpack = require("webpack");
-  const webpackConfig = require("../webpack.config");
+  const webpackConfig = require("../../webpack.config");
   webpackConfig.mode = 'development';
   const compiler = webpack(webpackConfig);
   app.use(webpackDevMiddleware(compiler, {
