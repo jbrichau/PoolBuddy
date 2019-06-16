@@ -1,6 +1,9 @@
 #include "DS18B20.h"
 #include "SparkFunMAX17043.h"
 
+PRODUCT_ID(4513);
+PRODUCT_VERSION(1);
+
 #define POWER D6
 #define TEMP_SENSOR D5
 #define PH_ADDRESS 99
@@ -10,7 +13,6 @@
 
 // Set external antenna (remembered after power off)
 STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
-//STARTUP(WiFi.selectAntenna(ANT_AUTO));
 
 // Reset application if unresponsive for 3 minutes
 ApplicationWatchdog wd(180000, System.reset);
@@ -144,11 +146,9 @@ void measure_temp() {
     delay(250);
     celsius = ds18b20.getTemperature();
   }
-  if(dsAttempts < 4) {
-    if(temp == 0)
+  if (dsAttempts < 4) {
+    if (!isnan(celsius))
       temp = celsius;
-    else
-      temp = (temp + celsius) / 2;
   }
 }
 
