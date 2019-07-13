@@ -18,6 +18,7 @@
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-react": "^7.0.0",
     "@google-cloud/datastore": "^1.4.0",
+    "@google-cloud/debug-agent": "^4.0.1",
     "acorn": "^6.2.0",
     "babel-loader": "^8.0.6",
     "express": "^4.17.1",

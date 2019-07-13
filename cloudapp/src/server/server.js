@@ -3,6 +3,8 @@ import path from 'path';
 import Datastore from '@google-cloud/datastore';
 import config from './config';
 
+require('@google-cloud/debug-agent').start();
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 const app = express();
 
