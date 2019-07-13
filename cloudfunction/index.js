@@ -12,12 +12,12 @@ exports.subscribe = function subscribe(data, context) {
   const datastore = Datastore({
     projectId: 'johansiot-199910'
   });
-  const soildata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
-  soildata.timestamp = new Date(pubsubMessage.attributes.published_at);
+  const pooldata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());
+  pooldata.timestamp = new Date(pubsubMessage.attributes.published_at);
 
   const entity = {
     key: datastore.key(['pooldata', pubsubMessage.messageId]),
-    data: soildata
+    data: pooldata
     };
   datastore.save(entity)
   	//.then(() => { console.log(entity) })

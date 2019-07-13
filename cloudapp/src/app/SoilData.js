@@ -26,8 +26,10 @@ class SoilData extends React.Component {
     else if (this.state.data.length == 0)
       return (<h1> Waiting for soil data... </h1>);
     else return (
-        <WaterChart title="Humidity" unit="%" dataKey="soilhumidity" stroke="#8884d8" data={this.state.data} />
-      )
+      <div>
+        <WaterChart title="Humidity soilsensor" unit="%" dataKey="soilhumidity" stroke="#8884d8" data={this.state.data} />
+        <WaterChart title="Battery soilsensor" unit="%" dataKey="soc" stroke="#82ca9d" data={this.state.data} />
+      </div>)
   }
 }
 
