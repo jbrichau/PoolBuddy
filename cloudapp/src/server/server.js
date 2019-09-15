@@ -1,19 +1,19 @@
 import express from 'express';
 import path from 'path';
-import Datastore from '@google-cloud/datastore';
+import { Datastore } from '@google-cloud/datastore';
 import config from './config';
-
-require('@google-cloud/debug-agent').start();
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const app = express();
+const dataStoreConfig = { "projectId": config.projectId };
 
-const dataStoreConfig = { projectId: config.projectId };
 if(isDevelopment)
   dataStoreConfig.keyFilename = 'config/poolbuddy-apikey.json';
+else
+  require('@google-cloud/debug-agent').start();
 
 app.post('/pooldata', (request, response) => {
-  const datastore = Datastore(dataStoreConfig);
+  const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const query = datastore.createQuery('pooldata')
@@ -27,10 +27,24 @@ app.post('/pooldata', (request, response) => {
 });
 
 app.post('/soildata', (request, response) => {
-  const datastore = Datastore(dataStoreConfig);
+  const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const query = datastore.createQuery('soildata')
+    .filter('timestamp', '>=', yesterday)
+    .order('timestamp', {
+      descending: false
+    });
+  datastore.runQuery(query, function(err, entities, info) {
+    response.json([err,info,entities]);
+  });
+});
+
+app.post('/weatherdata', (request, response) => {
+  const datastore = new Datastore(dataStoreConfig);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const query = datastore.createQuery('weatherdata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {
       descending: false
