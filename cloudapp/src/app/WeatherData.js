@@ -22,8 +22,8 @@ class WeatherData extends React.Component {
     .end((err,res) => { 
       const timeseries = new TimeSeries({
         name: "weather",
-        columns: ["time", "tempc","windkmh","windkmh2mavg","pressure","humidity"],
-        points: res.body[2].map((d) => [ d.timestamp = new Date(d.timestamp).getTime(),d.tempc,d.windkmh,d.windkmh2mavg,d.pressure,d.humidity ])});
+        columns: ["time", "tempc","windkmh","windkmh2mavg","windgustkmh10m","pressure","humidity","dailyrainmm"],
+        points: res.body[2].map((d) => [ d.timestamp = new Date(d.timestamp).getTime(),d.tempc,d.windkmh,d.windkmh2mavg,d.windgustkmh10m,d.pressure,d.humidity,d.dailyrainmm])});
       this.setState({data:timeseries}); });
   }
 
@@ -37,8 +37,10 @@ class WeatherData extends React.Component {
         <WeatherChart title="Temperature" unit="°C" dataKey="tempc" stroke="#8884d8" data={this.state.data} />
         <WeatherChart title="Wind" unit="kmh" dataKey="windkmh" stroke="#82ca9d" data={this.state.data} />
         <WeatherChart title="Wind 2m avg" unit="kmh" dataKey="windkmh2mavg" stroke="#82ca9d" data={this.state.data} />
+        <WeatherChart title="Windgust 10m" unit="kmh" dataKey="windgustkmh10m" stroke="#82ca9d" data={this.state.data} />
         <WeatherChart title="Pressure" unit="mbar" dataKey="pressure" stroke="#82ca9d" data={this.state.data} />
         <WeatherChart title="Humidity" unit="%" dataKey="humidity" stroke="#82ca9d" data={this.state.data} />
+        <WeatherChart title="Daily rain" unit="mm" dataKey="dailyrainmm" stroke="#82ca9d" data={this.state.data} />
      </div>);
   }
 }
