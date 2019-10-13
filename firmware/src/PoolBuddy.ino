@@ -2,10 +2,11 @@
 #include "SparkFunMAX17043.h"
 
 PRODUCT_ID(4513);
-PRODUCT_VERSION(1);
+PRODUCT_VERSION(2);
 
 #define POWER D6
 #define TEMP_SENSOR D5
+#define CALIBRATION_LED D7
 #define PH_ADDRESS 99
 #define ORP_ADDRESS 98
 #define SAMPLE_INTERVAL 2500
@@ -18,7 +19,7 @@ STARTUP(WiFi.selectAntenna(ANT_EXTERNAL));
 ApplicationWatchdog wd(180000, System.reset);
 
 DS18B20 ds18b20(TEMP_SENSOR);
-int nextSampleTime, nextSleepTime, sleepInterval;
+unsigned int nextSampleTime, nextSleepTime, sleepInterval;
 
 double temp = 0;
 double ph = 0;
@@ -26,18 +27,17 @@ double orp = 0;
 double soc = 0;
 int wifi;
 bool calibrationmode = false;
+bool temponly = false;
 
 void setup() {
-  //Serial.begin(9600);
-  temp = 0;
-  ph = 0;
-  orp = 0;
-  soc = 0;
   if (!Wire.isEnabled())
     Wire.begin();
+
   pinMode(POWER,OUTPUT);
   pinMode(TEMP_SENSOR, INPUT);
+  pinMode(CALIBRATION_LED, OUTPUT);
   digitalWrite(POWER, HIGH);
+  digitalWrite(CALIBRATION_LED, LOW);
 
   lipo.begin();
   lipo.quickStart();
@@ -46,31 +46,39 @@ void setup() {
   Particle.variable("pH", ph);
   Particle.variable("ORP", orp);
   Particle.variable("soc", soc);
-  Particle.variable("calibrating",calibrationmode);
-  Particle.function("switchmode",switchcalibrationmode);
-  Particle.function("calibratePh",calibrate_ph);
-  Particle.function("calibrateORP",calibrate_orp);
-  Particle.function("check",check_calibrated);
-  Particle.function("measure",measure);
-  Particle.function("slope",check_slope);
-  Particle.variable("wifi",wifi);
+  Particle.variable("calibrating", calibrationmode);
+  Particle.variable("temponly", temponly);
+  Particle.function("switchcalmode", switchcalibrationmode);
+  Particle.function("switchtemponly", switchtemponly);
+  Particle.function("calibratePH", calibrate_ph);
+  Particle.function("calibrateORP", calibrate_orp);
+  Particle.function("check", check_calibrated);
+  Particle.function("slope", check_slope);
+  Particle.variable("wifi", wifi);
 
   nextSleepTime = millis() + WAKE_INTERVAL;
+  //Serial.begin(9600);
 }
 
 void loop() {
-  if (!calibrationmode) {
-    if (millis() > nextSampleTime) {
+  // Always measure every sample time interval
+  if (millis() > nextSampleTime) {
       measure_temp();
-      compensate_temp_ph();
-      measure_ph();
-      measure_orp();
+      if(temponly == 0) {
+        compensate_temp_ph();
+        measure_ph();
+        measure_orp();
+      }
       measure_wifi();
       nextSampleTime = millis() + SAMPLE_INTERVAL;
       soc = lipo.getSOC();
-    }
-    if(millis() > nextSleepTime) {
-      Particle.publish("pooldata", water_data(), PRIVATE);
+  }
+
+  // Publish results before going to sleep
+  if(millis() > nextSleepTime) {
+    Particle.publish("pooldata", water_data(), PRIVATE);
+    // Only go to sleep when not in calibration mode
+    if (!calibrationmode) {
       if(soc <= 10)
         sleepInterval = 60 * 60;
       else if(soc <= 20)
@@ -78,26 +86,22 @@ void loop() {
       else
         sleepInterval = 60 * 15;
       nextSleepTime = millis() + (sleepInterval * 1000) + WAKE_INTERVAL;
-      executeRequest(PH_ADDRESS,"Sleep");
+      executeRequest(PH_ADDRESS,"Sleep"); 
       executeRequest(ORP_ADDRESS,"Sleep");
       digitalWrite(POWER, LOW);
-      System.sleep(SLEEP_MODE_DEEP,sleepInterval);
+      System.sleep(SLEEP_MODE_DEEP, sleepInterval);
+    } else {
+      nextSleepTime = millis() + SAMPLE_INTERVAL;
+      orp = ph = 0;
     }
   }
 }
 
 String water_data() {
-  return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f,\"wifi\":%d}",temp,ph,orp,soc,wifi);
-}
-
-int measure(String arg) {
-  ph = 0;
-  orp = 0;
-  temp = 0;
-  measure_temp();
-  measure_ph();
-  measure_orp();
-  measure_wifi();
+  if(temponly)
+    return String::format("{\"temperature\":%f,\"soc\":%f,\"wifi\":%d}",temp,soc,wifi);
+  else 
+    return String::format("{\"temperature\":%f,\"ph\":%f,\"orp\":%f,\"soc\":%f,\"wifi\":%d}",temp,ph,orp,soc,wifi);
 }
 
 void measure_ph() {
@@ -105,9 +109,9 @@ void measure_ph() {
   //Serial.print("Ph:");
   //Particle.publish("ph_reading", pH_data, PRIVATE);
   //Serial.println(pH_data);
-  if (isdigit(pH_data[0])) {
+  if (isdigit(pH_data.charAt(0))) {
     float current = String(pH_data).toFloat();
-    if(ph == 0)
+    if((ph == 0) | calibrationmode)
       ph = current;
     else
       ph = (ph + current) / 2;
@@ -118,9 +122,9 @@ void measure_orp() {
   String orp_data = executeRequest(ORP_ADDRESS,"R");
   //Serial.print("ORP:");
   //Serial.println(orp_data);
-  if (isdigit(orp_data[0])) {
+  if (isdigit(orp_data.charAt(0))) {
     float current = String(orp_data).toFloat();
-    if(orp == 0)
+    if((orp == 0) | calibrationmode)
       orp = current;
     else
       orp = (orp + current) / 2;
@@ -160,6 +164,19 @@ void measure_wifi() {
 
 int switchcalibrationmode(String arg) {
   calibrationmode = !calibrationmode;
+  if(calibrationmode) {
+    digitalWrite(CALIBRATION_LED, HIGH);
+    nextSleepTime = millis() + SAMPLE_INTERVAL;
+  } else {
+    digitalWrite(CALIBRATION_LED, LOW);
+    nextSleepTime = millis() + WAKE_INTERVAL;
+  }
+  return 0;
+}
+
+int switchtemponly(String arg) {
+  temponly = !temponly;
+  return 0;
 }
 
 int calibrate_ph(String arg) {
@@ -173,14 +190,14 @@ int calibrate_ph(String arg) {
     commandString.concat("4.00");
   if(arg=="high")
     commandString.concat("10.00");
-  Serial.println(executeRequest(PH_ADDRESS,commandString));
+  Particle.publish("calibrate", executeRequest(PH_ADDRESS,commandString), PRIVATE);
   return 0;
 }
 
 int calibrate_orp(String arg) {
   String commandString = String("Cal,");
   commandString.concat(arg);
-  executeRequest(ORP_ADDRESS,commandString);
+  Particle.publish("calibrate", executeRequest(ORP_ADDRESS,commandString), PRIVATE);
   return 0;
 }
 
@@ -191,17 +208,13 @@ void compensate_temp_ph() {
 }
 
 int check_calibrated(String args) {
-  Serial.println("Ph:");
-  Serial.println(executeRequest(PH_ADDRESS,"Cal,?"));
-  Serial.println(executeRequest(PH_ADDRESS,"Status"));
-  Serial.println("ORP:");
-  Serial.println(executeRequest(ORP_ADDRESS,"Cal,?"));
-  Serial.println(executeRequest(ORP_ADDRESS,"Status"));
+  Particle.publish("check",String::format("Ph:%s %s", executeRequest(PH_ADDRESS,"Cal,?").c_str(), executeRequest(PH_ADDRESS,"Status").c_str()), PRIVATE);
+  Particle.publish("check",String::format("ORP:%s %s", executeRequest(ORP_ADDRESS,"Cal,?").c_str(), executeRequest(ORP_ADDRESS,"Status").c_str()), PRIVATE);
   return 0;
 }
 
 int check_slope(String args) {
-  executeRequest(PH_ADDRESS,"Slope,?");
+  Particle.publish("check", executeRequest(PH_ADDRESS,"Slope,?"), PRIVATE);
   return 0;
 }
 
@@ -212,7 +225,7 @@ String executeRequest(int address, String cmd) {
   Wire.beginTransmission(address);
   Wire.write(cmd);
   Wire.endTransmission();
-  if(cmd=="R" | cmd.startsWith("Cal"))
+  if((cmd == "R") | cmd.startsWith("Cal"))
     delay(900);
   else
     delay(300);
@@ -220,20 +233,20 @@ String executeRequest(int address, String cmd) {
   int val=Wire.read();
   switch (val) {
     case 1:
-      Serial.println("Success");
+      //Serial.println("Success");
       break;
     case 2:
-      Serial.println("Failed");
+      //Serial.println("Failed");
       return String("Failed");
       break;
     case 254:
-      Serial.println("Pending");
+      //Serial.println("Pending");
       break;
     case 255:
-      Serial.println("No Data");
+      //Serial.println("No Data");
       break;
     default:
-      Serial.printlnf("Invalid response %d",val);
+      //Serial.printlnf("Invalid response %d",val);
       return String("Failed");
   }
 
