@@ -15,7 +15,7 @@ else
 app.post('/pooldata', (request, response) => {
   const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setDate(yesterday.getDate() - 2);
   const query = datastore.createQuery('pooldata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {
@@ -29,7 +29,7 @@ app.post('/pooldata', (request, response) => {
 app.post('/soildata', (request, response) => {
   const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setDate(yesterday.getDate() - 2);
   const query = datastore.createQuery('soildata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {
@@ -43,7 +43,7 @@ app.post('/soildata', (request, response) => {
 app.post('/weatherdata', (request, response) => {
   const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setDate(yesterday.getDate() - 2);
   const query = datastore.createQuery('weatherdata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {
