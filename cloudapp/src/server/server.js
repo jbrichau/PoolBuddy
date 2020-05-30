@@ -43,7 +43,7 @@ app.post('/soildata', (request, response) => {
 app.post('/weatherdata', (request, response) => {
   const datastore = new Datastore(dataStoreConfig);
   const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 2);
+  yesterday.setDate(yesterday.getDate() - 1);
   const query = datastore.createQuery('weatherdata')
     .filter('timestamp', '>=', yesterday)
     .order('timestamp', {

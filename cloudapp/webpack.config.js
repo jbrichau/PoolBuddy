@@ -20,11 +20,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'src/app/index.html.tpl',
       filename: 'index.html'
-    }),
-    /*new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
-    new CompressionPlugin(),
-    new LodashModuleReplacementPlugin() */
+    })
   ],
   module: {
     rules: [
@@ -35,4 +31,5 @@ module.exports = {
     ]
   }
 };
+
 
