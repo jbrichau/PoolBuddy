@@ -190,6 +190,8 @@ int calibrate_ph(String arg) {
     commandString.concat("4.00");
   if(arg=="high")
     commandString.concat("10.00");
+  if(arg=="clear")
+    commandString.concat("clear");
   Particle.publish("calibrate", executeRequest(PH_ADDRESS,commandString), PRIVATE);
   return 0;
 }
