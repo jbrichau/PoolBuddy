@@ -1,0 +1,6 @@
+https://expo.canny.io/feature-requests/p/bluetooth-1
+    expo add react-native-ble-plx @config-plugins/react-native-ble-plx expo-dev-client
+    expo run:ios -d
+
+    
+https://docs.expo.dev/development/getting-started/
