@@ -1,7 +1,10 @@
 {
   "name": "pooldata-store",
-  "version": "0.1.0",
+  "version": "1.0.1",
+  "scripts": {
+    "deploy": "gcloud functions deploy pooldata-store-1 --region=europe-west1 --runtime nodejs18 --memory=128MB --trigger-topic=pooldata --entry-point=subscribe"
+},
   "dependencies": {
-    "@google-cloud/datastore": "^1.4.0"
+    "@google-cloud/datastore": "^7.5.1"
   }
 }

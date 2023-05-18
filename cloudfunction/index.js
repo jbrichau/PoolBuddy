@@ -1,4 +1,4 @@
-const Datastore = require('@google-cloud/datastore');
+const {Datastore} = require('@google-cloud/datastore');
 /**
  * Background Cloud Function to be triggered by Pub/Sub.
  * This function is exported by index.js, and executed when
@@ -9,7 +9,7 @@ const Datastore = require('@google-cloud/datastore');
  */
 exports.subscribe = function subscribe(data, context) {
   const pubsubMessage = data;
-  const datastore = Datastore({
+  const datastore = new Datastore({
     projectId: 'johansiot-199910'
   });
   const pooldata = JSON.parse(Buffer.from(pubsubMessage.data, 'base64').toString());

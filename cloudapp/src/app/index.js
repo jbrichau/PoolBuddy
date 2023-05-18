@@ -7,7 +7,7 @@ import SoilData from './SoilData';
 import WeatherData from './WeatherData';
 
 ReactDOM.render(
-  <Tabs defaultActiveKey="Weather" id="uncontrolled-tab-example">
+  <Tabs defaultActiveKey="Pool" id="uncontrolled-tab-example">
     <Tab eventKey="Pool" title="Pool">
       <WaterData />
     </Tab>

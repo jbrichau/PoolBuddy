@@ -1,4 +1,4 @@
-runtime: nodejs14
+runtime: nodejs18
 env: standard
 automatic_scaling:
   min_instances: 0
